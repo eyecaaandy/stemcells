@@ -1,0 +1,19 @@
+# dependencies
+frontend/node_modules/
+backend/venv/
+
+# python cache
+backend/__pycache__/
+*.pyc
+
+# builds
+frontend/dist/
+
+# system
+.DS_Store
+
+# ML / audio outputs (VERY important for your project)
+tmp/
+separated/
+*.mp3
+*.wav

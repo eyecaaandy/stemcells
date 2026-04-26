@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background-color: #0a0a0f;
+  color: #e8e8f0;
+  font-family: 'Space Mono', 'Courier New', monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* h1 uses Univers (system stack fallback chain) */
+h1 {
+  font-family: 'Univers', 'Univers LT Std', 'UniversLTStd', 'HelveticaNeue-Light',
+               'Helvetica Neue Light', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+}
+
+/* ── Custom scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: #111118; }
+::-webkit-scrollbar-thumb { background: #3d3d5c; border-radius: 3px; }
+
+/* ── Audio player theming ──────────────────────────────────────────────────── */
+audio {
+  width: 100%;
+  height: 40px;
+  border-radius: 4px;
+  outline: none;
+  accent-color: #7c6aff;
+}
+
+audio::-webkit-media-controls-panel {
+  background-color: #16161f;
+}
+
+/* ── Drag-over highlight ───────────────────────────────────────────────────── */
+.drop-active {
+  border-color: #7c6aff !important;
+  background-color: rgba(124, 106, 255, 0.06) !important;
+  box-shadow: 0 0 0 3px rgba(124, 106, 255, 0.15);
+}
+
+/* ── Shimmer skeleton ──────────────────────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(90deg, #1e1e2e 25%, #2a2a3e 50%, #1e1e2e 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ── Waveform bars (decorative) ────────────────────────────────────────────── */
+.waveform-bar {
+  animation: pulse-bar 1s ease-in-out infinite;
+}
+.waveform-bar:nth-child(2)  { animation-delay: 0.1s; }
+.waveform-bar:nth-child(3)  { animation-delay: 0.2s; }
+.waveform-bar:nth-child(4)  { animation-delay: 0.3s; }
+.waveform-bar:nth-child(5)  { animation-delay: 0.15s; }
+.waveform-bar:nth-child(6)  { animation-delay: 0.25s; }
+.waveform-bar:nth-child(7)  { animation-delay: 0.05s; }
+.waveform-bar:nth-child(8)  { animation-delay: 0.35s; }
