@@ -4,3 +4,4 @@ python-multipart==0.0.9
 demucs==4.0.1
 torch==2.11.0
 torchaudio==2.11.0
+replicate
