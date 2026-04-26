@@ -220,7 +220,7 @@ function AudioPlayer({ url, color }) {
 
 // ── Single stem card ──────────────────────────────────────────────────────────
 function StemCard({ stem, url }) {
-  const fullUrl = `http://localhost:8000${url}`
+  const fullUrl = `https://stemcells.onrender.com${url}`
   const Icon = STEM_ICONS[stem.key]
 
   const handleDownload = async () => {
@@ -367,7 +367,10 @@ export default function App() {
     formData.append('file', file)
 
     try {
-      const res = await fetch('/separate', { method: 'POST', body: formData })
+      const res = await fetch('https://stemcells.onrender.com/separate', {
+  method: 'POST',
+  body: formData
+})
       finishProgress()
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
@@ -386,7 +389,7 @@ export default function App() {
   }
 
   const handleZipDownload = async () => {
-    const fullUrl = `http://localhost:8000${zipUrl}`
+    const fullUrl = `https://stemcells.onrender.com${zipUrl}`
     try {
       const res = await fetch(fullUrl)
       const blob = await res.blob()
