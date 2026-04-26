@@ -120,83 +120,23 @@ async def separate_stems(
     Accept an audio file, run Demucs, return URLs to each stem + zip.
     """
 
-    # ── 1. Validate extension ──────────────────────────────────────────────────
-    ext = Path(file.filename or "").suffix.lower()
-    if ext not in ALLOWED_EXTS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type '{ext}'. Upload an MP3 or WAV file.",
-        )
+       import os
+    import replicate
+    import tempfile
 
-    # ── 2. Read & size-check ───────────────────────────────────────────────────
-    audio_bytes = await file.read()
-    if len(audio_bytes) > MAX_FILE_BYTES:
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large ({len(audio_bytes) / 1e6:.1f} MB). Limit is {MAX_FILE_MB} MB.",
-        )
+    # save uploaded file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
 
-    # ── 3. Persist upload to a unique job directory ───────────────────────────
-    job_id    = uuid.uuid4().hex
-    job_upload = UPLOAD_DIR / job_id
-    job_output = OUTPUT_DIR / job_id
-    job_upload.mkdir(parents=True)
-    job_output.mkdir(parents=True)
-
-    input_path = job_upload / f"input{ext}"
-    input_path.write_bytes(audio_bytes)
-
-    # ── 4. Run Demucs ─────────────────────────────────────────────────────────
-    try:
-        run_demucs(input_path, job_output)
-    except subprocess.TimeoutExpired:
-        background_tasks.add_task(cleanup_job, job_id)
-        raise HTTPException(status_code=504, detail="Demucs timed out. Try a shorter file.")
-    except RuntimeError as exc:
-        background_tasks.add_task(cleanup_job, job_id)
-        raise HTTPException(status_code=500, detail=str(exc))
-
-    # ── 5. Locate output stems ────────────────────────────────────────────────
-    try:
-        stem_paths = find_stems(job_output, job_id)
-    except FileNotFoundError as exc:
-        background_tasks.add_task(cleanup_job, job_id)
-        raise HTTPException(status_code=500, detail=str(exc))
-
-    # ── 6. Build zip of all stems ─────────────────────────────────────────────
-    zip_path = job_output / "all_stems.zip"
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        for name, path in stem_paths.items():
-            zf.write(path, arcname=f"{name}.mp3")
-
-    # ── 7. Build public URL map ────────────────────────────────────────────────
-    # Paths are served by the StaticFiles mount at /files/<job_id>/...
-    def stem_url(path: Path) -> str:
-        # path is something like tmp/outputs/<job_id>/htdemucs/input/vocals.mp3
-        # We need the part relative to OUTPUT_DIR
-        rel = path.relative_to(OUTPUT_DIR)
-        return f"/files/{rel.as_posix()}"
-
-    zip_rel = zip_path.relative_to(OUTPUT_DIR)
-
-    return JSONResponse({
-        "job_id": job_id,
-        "stems": {
-            name: stem_url(path)
-            for name, path in stem_paths.items()
-        },
-        "zip_url": f"/files/{zip_rel.as_posix()}",
-    })
-
-
-@app.get("/download/{job_id}/zip")
-async def download_zip(job_id: str) -> FileResponse:
-    """Convenience endpoint that streams the zip for a completed job."""
-    zip_path = OUTPUT_DIR / job_id / "all_stems.zip"
-    if not zip_path.exists():
-        raise HTTPException(status_code=404, detail="Zip not found. Run /separate first.")
-    return FileResponse(
-        path=str(zip_path),
-        media_type="application/zip",
-        filename="stems.zip",
+    # send to Replicate
+    output = replicate.run(
+        "cjwbw/demucs",
+        input={
+            "audio": open(tmp_path, "rb")
+        }
     )
+
+    return {
+        "result": output
+    }
