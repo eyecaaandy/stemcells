@@ -116,27 +116,19 @@ async def separate_stems(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ) -> JSONResponse:
-    """
-    Accept an audio file, run Demucs, return URLs to each stem + zip.
-    """
 
-       import os
-    import replicate
+      import replicate
     import tempfile
 
-    # save uploaded file
+    # save uploaded file temporarily
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
         tmp.write(await file.read())
         tmp_path = tmp.name
 
-    # send to Replicate
+    # call Replicate (cloud AI)
     output = replicate.run(
         "cjwbw/demucs",
-        input={
-            "audio": open(tmp_path, "rb")
-        }
+        input={"audio": open(tmp_path, "rb")}
     )
 
-    return {
-        "result": output
-    }
+    return {"result": output}
